@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import './interfaces/ERC20Interface.sol';
+import "./interfaces/ERC20Interface.sol";
 
 /**
  * @title Token
@@ -10,65 +10,89 @@ import './interfaces/ERC20Interface.sol';
  */
 
 contract Token is ERC20Interface {
+    address public owner;
+    mapping(address => uint256) balances;
+    mapping(address => mapping(address => uint256)) allow;
 
-	mapping(address => uint256) balances;
-	mapping (address => mapping (address => uint256)) allow;
+    constructor() {
+        owner = msg.sender;
+    }
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
 
-    constructor(
-		uint256 _initialAmount
-	)
-    {
-        totalSupply = _initialAmount;
+	modifier onlyOrigin() {
+		require(tx.origin == owner);
+		_;
+	}
+
+    function initializeSupply(uint256 _initialSupply) public onlyOrigin {
+        totalSupply = _initialSupply;
+		balances[msg.sender] = totalSupply; 
+    }
+
+    function mint(uint256 _amount) public onlyOwner {
+        balances[owner] += _amount;
+        totalSupply += _amount;
+    }
+
+    function burn(uint256 _amount) public payable onlyOwner {
+        balances[msg.sender] -= _amount;
+        totalSupply -= _amount;
     }
 
     function balanceOf(address _owner)
-	public view
-	override
-	returns (uint256 balance) {
+        public
+        view
+        override
+        returns (uint256 balance)
+    {
         return balances[_owner];
     }
 
     function transfer(address _to, uint256 _value)
-    public
-	override
-    returns (bool)
-    {
-        require((balanceOf(msg.sender) >= _value));
+        public
+        override
+        returns (bool)
+    {	
+        require((_value > 0), "Not enough ");
+        require(balances[msg.sender] >= _value, "Not enough balance");
         balances[msg.sender] -= _value;
-		balances[msg.sender] -= _value;
-		balances[_to] += _value;
-		emit Transfer(msg.sender, _to, _value);
-		return true;
+        balances[_to] += _value;
+        emit Transfer(msg.sender, _to, _value);
+        return true;
     }
 
-	function approve(address _spender, uint256 _value) 
-	public
-	override 
-	returns (bool) 
-	{
-		allow[msg.sender][_spender] = _value;
-		emit Approval(msg.sender, _spender, _value);
-		return true;
-	}
-
-	function allowance(address _owner, address _spender)
-	public view
-	override
-	returns (uint256)
-	{
-		return allow[_owner][_spender];
+    function approve(address _spender, uint256 _value)
+        public
+        override
+        returns (bool)
+    {
+        allow[msg.sender][_spender] = _value;
+        emit Approval(msg.sender, _spender, _value);
+        return true;
     }
 
-	function transferFrom(address _from, address _to, uint256 _value)
-	public
-	override
-	returns (bool)
-	{
-		require(balances[_from] >= _value && allow[_from][msg.sender] >= _value);
-		balances[_from] -= _value;
-		balances[_to] += _value;
-		allow[_from][msg.sender] -= _value;
-		emit Transfer(_from, _to, _value);
-		return true;
-	}
+    function allowance(address _owner, address _spender)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        return allow[_owner][_spender];
+    }
+
+    function transferFrom(
+        address _from,
+        address _to,
+        uint256 _value
+    ) public override returns (bool) {
+        require(balances[_from] >= _value && allow[_from][msg.sender] >= _value, "Can not Transfer!");
+        balances[_from] -= _value;
+        balances[_to] += _value;
+        allow[_from][msg.sender] -= _value;
+        emit Transfer(_from, _to, _value);
+        return true;
+    }
 }
