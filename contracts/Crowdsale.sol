@@ -22,6 +22,8 @@ contract Crowdsale
 	uint256 public endTime;
 	uint256 public rate = 1;
 
+	/// Deploy Token contract
+	/// Initialize the total Supply of Tokens, the beggining and ending of ICO 
 	constructor()
 	{
 		owner = msg.sender;
@@ -31,9 +33,18 @@ contract Crowdsale
 		endTime = startTime + 30 * 24 hours;
 	}
 
+    event Purchase(address indexed _who, uint256 _value);
+    event Refund(address indexed _who, uint256 _value);
+
 	modifier inTime()
 	{
 		require(block.timestamp > startTime && block.timestamp < endTime, "Not In Time.");
+		_;
+	}
+
+	modifier onlyOwner()
+	{
+		require(msg.sender == owner);
 		_;
 	}
 
@@ -47,6 +58,7 @@ contract Crowdsale
 		require(tokenSold < supply, "All Tokens Are Sold.");
 		require(token.transfer(msg.sender, tokens), "Can Not Buy.");
 		tokenSold += tokens;
+		emit Purchase(msg.sender, tokens);
 	}
 
 	function sell(uint256 _amount)
@@ -58,6 +70,7 @@ contract Crowdsale
 		require(token.transferFrom(msg.sender, address(this), _amount), "Can Not Sell.");
 		payable(msg.sender).transfer(inWei);
 		tokenSold -= _amount;
+		emit Refund(msg.sender, _amount);
 	}
 
 	function remainingTime()
@@ -66,5 +79,27 @@ contract Crowdsale
 	returns(uint256)
 	{
 		return endTime - startTime;
+	}
+
+	function mintTokens(uint256 _amount)
+	public
+	onlyOwner
+	{
+		token.mint(_amount);
+	}
+
+	function burnTokens(uint256 _amount)
+	public
+	onlyOwner
+	{
+		token.burn(_amount);
+	}
+
+	function moveFunds()
+	public
+	onlyOwner
+	{
+		require(block.timestamp > endTime, "ICO is running.");
+		payable(owner).transfer(address(this).balance);
 	}
 }

@@ -18,11 +18,6 @@ contract Token is ERC20Interface {
         owner = tx.origin;
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
-
 	modifier onlyOrigin()
 	{
 		require(tx.origin == owner);
@@ -37,18 +32,22 @@ contract Token is ERC20Interface {
     }
 
     function mint(uint256 _amount)
-	public onlyOwner
+	public onlyOrigin
+	returns(bool)
 	{
         balances[owner] += _amount;
         totalSupply += _amount;
+		return true;
     }
 
     function burn(uint256 _amount)
-	public onlyOwner
+	public onlyOrigin
 	payable
+	returns(bool)
 	{
         balances[msg.sender] -= _amount;
         totalSupply -= _amount;
+		return true;
     }
 
     function balanceOf(address _owner)
