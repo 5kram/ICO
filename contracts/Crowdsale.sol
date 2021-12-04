@@ -22,10 +22,10 @@ contract Crowdsale
 	uint256 public endTime;
 	uint256 public rate = 1;
 
-	constructor(Token _token)
+	constructor()
 	{
 		owner = msg.sender;
-		token = _token;
+		token = new Token();
 		token.initializeSupply(initialSupply);
 		startTime = block.timestamp;
 		endTime = startTime + 30 * 24 hours;

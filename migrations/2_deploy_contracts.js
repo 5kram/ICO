@@ -5,6 +5,6 @@ var Token = artifacts.require("./Token.sol");
 module.exports = async function(deployer) {
 	await deployer.deploy(Token);
 	const token = await Token.deployed();
-	await deployer.deploy(Crowdsale, token.address);
+	await deployer.deploy(Crowdsale);
 	await deployer.deploy(Queue);
 };

@@ -15,8 +15,9 @@ contract Token is ERC20Interface {
     mapping(address => mapping(address => uint256)) allow;
 
     constructor() {
-        owner = msg.sender;
+        owner = tx.origin;
     }
+	
     modifier onlyOwner() {
         require(msg.sender == owner);
         _;
