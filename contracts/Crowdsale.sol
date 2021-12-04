@@ -31,8 +31,9 @@ contract Crowdsale
 		endTime = startTime + 30 * 24 hours;
 	}
 
-	modifier inTime() {
-		require(block.timestamp > startTime && block.timestamp < endTime, "Not in time");
+	modifier inTime()
+	{
+		require(block.timestamp > startTime && block.timestamp < endTime, "Not In Time.");
 		_;
 	}
 
@@ -40,10 +41,12 @@ contract Crowdsale
 	public payable
 	inTime
 	{
-		// TODO: Require tokenSSold < totalSupply
+		uint256 supply = token.totalSupply();
 		uint256 tokens = msg.value.mul(rate);
-		require(token.transfer(msg.sender, tokens), "Could not buy.");
-		tokenSold += msg.value;
+		
+		require(tokenSold < supply, "All Tokens Are Sold.");
+		require(token.transfer(msg.sender, tokens), "Can Not Buy.");
+		tokenSold += tokens;
 	}
 
 	function sell(uint256 _amount)
@@ -51,7 +54,9 @@ contract Crowdsale
 	inTime
 	{	
 		uint256 inWei = _amount.div(rate);
-		require(token.transfer(msg.sender, inWei), "Could not sell.");
+		token.approve(msg.sender, _amount);
+		require(token.transferFrom(msg.sender, address(this), _amount), "Can Not Sell.");
+		payable(msg.sender).transfer(inWei);
 		tokenSold -= _amount;
 	}
 

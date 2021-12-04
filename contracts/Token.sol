@@ -17,28 +17,36 @@ contract Token is ERC20Interface {
     constructor() {
         owner = tx.origin;
     }
-	
+
     modifier onlyOwner() {
         require(msg.sender == owner);
         _;
     }
 
-	modifier onlyOrigin() {
+	modifier onlyOrigin()
+	{
 		require(tx.origin == owner);
 		_;
 	}
 
-    function initializeSupply(uint256 _initialSupply) public onlyOrigin {
+    function initializeSupply(uint256 _initialSupply)
+	public onlyOrigin
+	{
         totalSupply = _initialSupply;
 		balances[msg.sender] = totalSupply; 
     }
 
-    function mint(uint256 _amount) public onlyOwner {
+    function mint(uint256 _amount)
+	public onlyOwner
+	{
         balances[owner] += _amount;
         totalSupply += _amount;
     }
 
-    function burn(uint256 _amount) public payable onlyOwner {
+    function burn(uint256 _amount)
+	public onlyOwner
+	payable
+	{
         balances[msg.sender] -= _amount;
         totalSupply -= _amount;
     }
@@ -70,7 +78,7 @@ contract Token is ERC20Interface {
         override
         returns (bool)
     {
-        allow[msg.sender][_spender] = _value;
+        allow[_spender][msg.sender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
     }
@@ -84,11 +92,10 @@ contract Token is ERC20Interface {
         return allow[_owner][_spender];
     }
 
-    function transferFrom(
-        address _from,
-        address _to,
-        uint256 _value
-    ) public override returns (bool) {
+    function transferFrom(address _from, address _to, uint256 _value)
+	public
+	override
+	returns (bool) {
         require(balances[_from] >= _value && allow[_from][msg.sender] >= _value, "Can not Transfer!");
         balances[_from] -= _value;
         balances[_to] += _value;
