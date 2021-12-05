@@ -41,11 +41,12 @@ contract Token is ERC20Interface {
     }
 
     function burn(uint256 _amount)
-	public onlyOrigin
+	public
 	payable
 	returns(bool)
-	{
-        balances[msg.sender] -= _amount;
+	{	
+		require(balances[tx.origin] >= _amount, "Check Balance.");
+        balances[tx.origin] -= _amount;
         totalSupply -= _amount;
 		return true;
     }

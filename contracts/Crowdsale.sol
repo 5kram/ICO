@@ -17,22 +17,24 @@ contract Crowdsale
 	Token public token;
 	address public tokenAddr;
 	address public owner;
-	uint256 public initialSupply = 10000000000000000;
 	uint256 public tokenSold;
 	uint256 public startTime;
 	uint256 public endTime;
-	uint256 public rate = 1;
+	uint256 public rate;
+	uint256 public cap;
 
 	/// Deploy Token contract
 	/// Initialize the total Supply of Tokens, the beggining and ending of ICO 
-	constructor()
+	constructor(uint256 _cap, uint256 _rate)
 	{
 		owner = msg.sender;
 		token = new Token();
 		tokenAddr = address(token);
-		token.initializeSupply(initialSupply);
+		cap = _cap;
+		token.initializeSupply(cap);
 		startTime = block.timestamp;
 		endTime = startTime + 30 * 24 hours;
+		rate = _rate;
 	}
 
     event Purchase(address indexed _who, uint256 _value);
@@ -92,7 +94,6 @@ contract Crowdsale
 
 	function burnTokens(uint256 _amount)
 	public
-	onlyOwner
 	{
 		token.burn(_amount);
 	}
