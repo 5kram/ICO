@@ -15,6 +15,7 @@ contract Crowdsale
 {
 	using SafeMath for uint256;
 	Token public token;
+	address public tokenAddr;
 	address public owner;
 	uint256 public initialSupply = 10000000000000000;
 	uint256 public tokenSold;
@@ -28,6 +29,7 @@ contract Crowdsale
 	{
 		owner = msg.sender;
 		token = new Token();
+		tokenAddr = address(token);
 		token.initializeSupply(initialSupply);
 		startTime = block.timestamp;
 		endTime = startTime + 30 * 24 hours;

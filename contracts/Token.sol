@@ -77,6 +77,7 @@ contract Token is ERC20Interface {
         override
         returns (bool)
     {
+		require(balanceOf(_spender) >= _value, "Not Enough Tokens in Balance.");
         allow[_spender][msg.sender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
@@ -95,7 +96,7 @@ contract Token is ERC20Interface {
 	public
 	override
 	returns (bool) {
-        require(balances[_from] >= _value && allow[_from][msg.sender] >= _value, "Can not Transfer!");
+        require(balances[_from] >= _value && allow[_from][msg.sender] >= _value, "Value Can Not Be Accepted.");
         balances[_from] -= _value;
         balances[_to] += _value;
         allow[_from][msg.sender] -= _value;
