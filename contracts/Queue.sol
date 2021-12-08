@@ -28,8 +28,10 @@ contract Queue
 
 */
 	User[] public users;
+	
 	/* Add events */
-	// CODE HERE
+	event TimeOut(address indexed _who);
+
 
 	constructor()
 	{
@@ -68,6 +70,7 @@ contract Queue
 		if (!isLIFO)
 		{
 			swapOrder();
+			isLIFO = true;
 		}
 		return users[0].who;
 	}
@@ -96,9 +99,12 @@ contract Queue
 		if (isLIFO)
 		{
 			swapOrder();
+			isLIFO = false;
 		}
-		require(users[users.length - 1].timestamp + 5 minutes > block.timestamp);
+		require(users[users.length - 1].timestamp + timeLimit >= block.timestamp);
 		users[users.length - 1].hasFinished = true;
+		emit TimeOut(users[users.length - 1].who);
+		dequeue();
 	}
 	
 	/* Removes the first person in line; either when their time is up or when
@@ -110,6 +116,7 @@ contract Queue
 		if (isLIFO)
 		{
 			swapOrder();
+			isLIFO = false;
 		}
 		require(users[users.length - 1].hasFinished, "Stop Pushing.");
 		users.pop();
@@ -122,6 +129,7 @@ contract Queue
 		if (!isLIFO)
 		{
 			swapOrder();
+			isLIFO = true;
 		}
 		User memory user;
 		user.who = addr;
@@ -152,5 +160,4 @@ contract Queue
 		//	users[length - 1 - i].who = TempUser.who;
 		}
 	}
-
 }

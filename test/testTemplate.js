@@ -99,6 +99,18 @@ contract('Token', function(accounts) {
 				const balance = await token.balanceOf(accounts[2])
 				assert.equal(balance.toString(), '20000')
 		});
+/*
+		it("should kick first person out of line", async function() {
+			await queue.checkTime();
+			const size = await queue.qsize.call()
+			assert.equal(size.toString(), '3')
+		});
+
+		it("should set the second person in line first", async function() {
+			const addr = await queue.getFirst.call()
+			assert.equal(addr, accounts[4])
+		});
+*/
 	});
 	
 
