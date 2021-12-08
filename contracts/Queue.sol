@@ -8,23 +8,48 @@ pragma solidity ^0.8.9;
  * See this example: http://interactivepython.org/courselib/static/pythonds/BasicDS/ImplementingaQueueinPython.html
  */
 
-contract Queue {
+contract Queue
+{
 	/* State variables */
 	uint8 size = 5;
-	// CODE HERE
+	uint256 timeLimit = 5 minutes;
+	bool isLIFO;
+	//uint8 length;
+	
+	struct User
+	{
+		address who;
+		uint256 timestamp;
+		bool hasFinished;
+	}
+/*
+	mapping(address => uint256) users;
+	mapping(address => bool) hasFinished;
 
+*/
+	User[] public users;
 	/* Add events */
 	// CODE HERE
 
-	/* Add constructor */
-	// CODE HERE
-
+	constructor()
+	{
+		isLIFO = true;
+		//users = new User[](size);
+	}
+	
+	/// Called when LIFO order
+	function finished()
+	public
+	{
+		users[0].hasFinished = true;
+	}
+	
 	/* Returns the number of people waiting in line */
 	function qsize()
 	public view
 	returns(uint8)
 	{
-		// CODE HERE
+		return uint8(users.length);
 	}
 
 	/* Returns whether the queue is empty or not */
@@ -32,15 +57,19 @@ contract Queue {
 	public view
 	returns(bool)
 	{
-		// CODE HERE
+		return (users.length == 0);
 	}
 	
 	/* Returns the address of the person in the front of the queue */
 	function getFirst()
-	public view
+	public
 	returns(address)
 	{
-		// CODE HERE
+		if (!isLIFO)
+		{
+			swapOrder();
+		}
+		return users[0].who;
 	}
 	
 	/* Allows `msg.sender` to check their position in the queue */
@@ -48,7 +77,14 @@ contract Queue {
 	public view
 	returns(uint8)
 	{
-		// CODE HERE
+		for (uint8 i = 0; i < users.length - 1; i++)
+		{
+			if (users[i].who == tx.origin)
+			{
+				return i + 1;
+			}
+		}
+		return 0;
 	}
 	
 	/* Allows anyone to expel the first person in line if their time
@@ -56,8 +92,13 @@ contract Queue {
 	 */
 	function checkTime()
 	public
-	{
-		// CODE HERE
+	{	
+		if (isLIFO)
+		{
+			swapOrder();
+		}
+		require(users[users.length - 1].timestamp + 5 minutes > block.timestamp);
+		users[users.length - 1].hasFinished = true;
 	}
 	
 	/* Removes the first person in line; either when their time is up or when
@@ -66,13 +107,50 @@ contract Queue {
 	function dequeue()
 	public
 	{
-		// CODE HERE
+		if (isLIFO)
+		{
+			swapOrder();
+		}
+		require(users[users.length - 1].hasFinished, "Stop Pushing.");
+		users.pop();
 	}
 
 	/* Places `addr` in the first empty position in the queue */
 	function enqueue(address addr)
 	public
 	{
-		// CODE HERE
+		if (!isLIFO)
+		{
+			swapOrder();
+		}
+		User memory user;
+		user.who = addr;
+		user.timestamp = block.timestamp;
+		user.hasFinished = false;
+		users.push(user);
 	}
+
+	function swapOrder()
+	public
+	{
+		uint256 length = users.length;
+		for (uint8 i = 0; i < (length) / 2; i++)
+		{	
+			User memory TempUser;
+			TempUser = users[i];
+		//	TempUser.hasFinished = users[i].hasFinished;
+		//	TempUser.timestamp = users[i].timestamp;
+		//	TempUser.who = users[i].who;
+			users[i] = users[length - 1 - i];
+		//	users[i].hasFinished = users[length - 1 - i].hasFinished;
+		//	users[i].timestamp = users[length - 1 - i].timestamp;
+		//	users[i].who = users[length - 1 - i].who;
+			
+			users[length - 1 - i] = TempUser;
+		//	users[length - 1 - i].timestamp = TempUser.timestamp;
+		//	users[length - 1 - i].hasFinished = TempUser.hasFinished;
+		//	users[length - 1 - i].who = TempUser.who;
+		}
+	}
+
 }
