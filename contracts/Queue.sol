@@ -10,11 +10,14 @@ pragma solidity ^0.8.9;
 
 contract Queue
 {
-	/* State variables */
+	/// State variables
 	uint8 size = 5;
 	uint256 timeLimit = 5 minutes;
+	/// When the queue isLIFO the first buyer is at index 0,
+	/// in order to push the next buyer in the next empty position.
+	/// When the queue !isLIFO the first buyer is last in line,
+	/// in order to pop the first buyer from the queue.
 	bool isLIFO;
-	//uint8 length;
 	
 	struct User
 	{
@@ -22,31 +25,26 @@ contract Queue
 		uint256 timestamp;
 		bool hasFinished;
 	}
-/*
-	mapping(address => uint256) users;
-	mapping(address => bool) hasFinished;
 
-*/
 	User[] public users;
 	
-	/* Add events */
+	/// Add events
 	event TimeOut(address indexed _who);
 
 
 	constructor()
 	{
 		isLIFO = true;
-		//users = new User[](size);
 	}
 	
-	/// Called when LIFO order
+	/// Called when the order isLIFO, from buy function in Crawdsale
 	function finished()
 	public
 	{
 		users[0].hasFinished = true;
 	}
 	
-	/* Returns the number of people waiting in line */
+	/// Returns the number of people waiting in line
 	function qsize()
 	public view
 	returns(uint8)
@@ -54,7 +52,7 @@ contract Queue
 		return uint8(users.length);
 	}
 
-	/* Returns whether the queue is empty or not */
+	/// Returns whether the queue is empty or not
 	function empty()
 	public view
 	returns(bool)
@@ -62,7 +60,7 @@ contract Queue
 		return (users.length == 0);
 	}
 	
-	/* Returns the address of the person in the front of the queue */
+	/// Returns the address of the person in the front of the queue
 	function getFirst()
 	public
 	returns(address)
@@ -75,7 +73,7 @@ contract Queue
 		return users[0].who;
 	}
 	
-	/* Allows `msg.sender` to check their position in the queue */
+	/// Allows `msg.sender` to check their position in the queue
 	function checkPlace()
 	public view
 	returns(uint8)
@@ -122,7 +120,7 @@ contract Queue
 		users.pop();
 	}
 
-	/* Places `addr` in the first empty position in the queue */
+	/// Places `addr` in the first empty position in the queue
 	function enqueue(address addr)
 	public
 	{
@@ -146,18 +144,8 @@ contract Queue
 		{	
 			User memory TempUser;
 			TempUser = users[i];
-		//	TempUser.hasFinished = users[i].hasFinished;
-		//	TempUser.timestamp = users[i].timestamp;
-		//	TempUser.who = users[i].who;
 			users[i] = users[length - 1 - i];
-		//	users[i].hasFinished = users[length - 1 - i].hasFinished;
-		//	users[i].timestamp = users[length - 1 - i].timestamp;
-		//	users[i].who = users[length - 1 - i].who;
-			
 			users[length - 1 - i] = TempUser;
-		//	users[length - 1 - i].timestamp = TempUser.timestamp;
-		//	users[length - 1 - i].hasFinished = TempUser.hasFinished;
-		//	users[length - 1 - i].who = TempUser.who;
 		}
 	}
 }
