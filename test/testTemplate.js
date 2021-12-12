@@ -35,7 +35,7 @@ contract('Token', function(accounts) {
 		queue = await Queue.at(queueAddress);
 	});
 	
-	describe('Crawdsale deployment', function() {
+	describe('Deployment', function() {
 		it("should have the correct initial supply", async function() {
 			const cap = await token.totalSupply.call()
 			assert.equal(cap.toString(), '1000000000000000000')
@@ -46,6 +46,10 @@ contract('Token', function(accounts) {
 			assert.equal(balance.toString(), '1000000000000000000')
 		});
 
+
+	});
+
+	describe('Transactions and buyers queue', function() {
 		it("should get in line", async function() {
 			await ico.getInLine({from: accounts[1]})
 			await ico.getInLine({from: accounts[2]})
@@ -111,10 +115,5 @@ contract('Token', function(accounts) {
 			assert.equal(addr, accounts[4])
 		});
 */
-	});
-	
-
-	describe('Your string here', function() {
-		// CODE HERE
 	});
 });
