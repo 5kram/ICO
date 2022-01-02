@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity 0.8.9;
 
 /**
  * @title Queue
@@ -11,14 +11,17 @@ pragma solidity ^0.8.9;
 contract Queue
 {
 	/// State variables
-	uint8 size = 5;
+	uint8 size = 6;
 	uint256 timeLimit = 5 minutes;
-	/// When the queue isLIFO the first buyer is at index 0,
-	/// in order to push the next buyer in the next empty position.
-	/// When the queue !isLIFO the first buyer is last in line,
-	/// in order to pop the first buyer from the queue.
-	bool isLIFO;
+	uint8 head = 0;
+	uint8 tail = 0;
+	uint8 nOfUsers = 0;
+	address contractOwner;
+	address[6] queue;
 	
+	mapping(uint8 => bool) hasFinished;
+	mapping(uint8 => uint256) timestamp;
+	/*
 	struct User
 	{
 		address who;
@@ -27,62 +30,61 @@ contract Queue
 	}
 
 	User[] public users;
-	
+	*/
 	/// Add events
 	event TimeOut(address indexed _who);
 
 
 	constructor()
 	{
-		isLIFO = true;
+		contractOwner = msg.sender;
 	}
-	
-	/// Called when the order isLIFO, from buy function in Crawdsale
-	function finished()
-	public
+
+	modifier onlyContractOwner()
 	{
-		users[0].hasFinished = true;
-	}
+		require(msg.sender == contractOwner);
+		_;
+	}	
 	
 	/// Returns the number of people waiting in line
 	function qsize()
-	public view
+	public
+	view
 	returns(uint8)
 	{
-		return uint8(users.length);
+		return nOfUsers;
 	}
 
 	/// Returns whether the queue is empty or not
 	function empty()
-	public view
+	public
+	view
 	returns(bool)
 	{
-		return (users.length == 0);
+		return (nOfUsers == 0);
 	}
 	
 	/// Returns the address of the person in the front of the queue
 	function getFirst()
 	public
+	view
 	returns(address)
 	{
-		if (!isLIFO)
-		{
-			swapOrder();
-			isLIFO = true;
-		}
-		return users[0].who;
+
+		return queue[head];
 	}
 	
 	/// Allows `msg.sender` to check their position in the queue
 	function checkPlace()
-	public view
+	public
+	view
 	returns(uint8)
 	{
-		for (uint8 i = 0; i < users.length - 1; i++)
+		for (uint8 i = head; i != tail; i = (i+1) % size)
 		{
-			if (users[i].who == tx.origin)
+			if (queue[i] == tx.origin)
 			{
-				return i + 1;
+				return (size + i - head) % size;
 			}
 		}
 		return 0;
@@ -94,14 +96,10 @@ contract Queue
 	function checkTime()
 	public
 	{	
-		if (isLIFO)
-		{
-			swapOrder();
-			isLIFO = false;
-		}
-		require(users[users.length - 1].timestamp + timeLimit >= block.timestamp);
-		users[users.length - 1].hasFinished = true;
-		emit TimeOut(users[users.length - 1].who);
+
+		require(timestamp[head] + timeLimit >= block.timestamp, "Time is not up.");
+		hasFinished[head] = true;
+		emit TimeOut(queue[head]);
 		dequeue();
 	}
 	
@@ -111,41 +109,28 @@ contract Queue
 	function dequeue()
 	public
 	{
-		if (isLIFO)
-		{
-			swapOrder();
-			isLIFO = false;
-		}
-		require(users[users.length - 1].hasFinished, "Stop Pushing.");
-		users.pop();
+		require(nOfUsers > 0, "Deleting from  Empty Queue .");
+		require(hasFinished[head], "Stop Pushing.");
+		head = (head + 1) % size;
+		timestamp[head] = block.timestamp;
+		nOfUsers--;
 	}
 
 	/// Places `addr` in the first empty position in the queue
 	function enqueue(address addr)
 	public
 	{
-		if (!isLIFO)
-		{
-			swapOrder();
-			isLIFO = true;
-		}
-		User memory user;
-		user.who = addr;
-		user.timestamp = block.timestamp;
-		user.hasFinished = false;
-		users.push(user);
+		require(nOfUsers < size-1, "Adding to Full Queue .");
+		queue[tail] = addr;
+		hasFinished[tail] = false;
+		tail = (tail + 1) % size;
+		nOfUsers++;
 	}
 
-	function swapOrder()
+	function finished()
 	public
+	onlyContractOwner
 	{
-		uint256 length = users.length;
-		for (uint8 i = 0; i < (length) / 2; i++)
-		{	
-			User memory TempUser;
-			TempUser = users[i];
-			users[i] = users[length - 1 - i];
-			users[length - 1 - i] = TempUser;
-		}
+		hasFinished[head] = true;
 	}
 }
